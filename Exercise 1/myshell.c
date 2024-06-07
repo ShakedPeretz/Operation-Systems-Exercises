@@ -18,6 +18,17 @@ void history(char historyData[HISTORY_SIZE][SIZE], int historyCount) {
     }
 }
 
+void cd(char **path){
+    
+
+
+
+
+}
+
+
+
+
 int main() {
     char input[SIZE];
     char *command;
@@ -48,8 +59,7 @@ int main() {
 
         // Command handling
         if (strcmp(command, "cd") == 0) {
-            // Implement and call cd() function
-            printf("cd command executed\n");
+            cd(arguments);
         } else if (strcmp(command, "pwd") == 0) {
             // Implement and call pwd() function
             printf("pwd command executed\n");
@@ -66,33 +76,3 @@ int main() {
     return 0;
 }
 
-
-
-// void getUserInput(char *input, char **command, char **arguments)
-// {
-//     fgets(input, SIZE, stdin);
-//     input[strcspn(input, "\n")] = 0; // Remove trailing newline
-
-//     *command = strtok(input, " ");
-
-//     int i = 0;
-
-//     char *token = strtok(NULL, " ");
-//     while (token != NULL)
-//     {
-//         arguments[i] = token;
-//         i++;
-//         token = strtok(NULL, " ");
-//     }
-
-//     // Null terminate the arguments array
-//     arguments[i] = NULL;
-    
-//     // Print the command and arguments
-//     printf("Command: %s\n", *command);
-//     printf("Arguments:\n");
-//     for (int j = 0; j < i; j++)
-//     {
-//         printf("%s\n", arguments[j]);
-//     }
-// }
