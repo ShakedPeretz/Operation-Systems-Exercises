@@ -1,77 +1,98 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define SIZE 100
+#define HISTORY_SIZE 100
 
-void history() {}
-
-void cd(char *arguments) {}
-
-void pwd(char *arguments) {}
-
-void exit(char *arguments) {}
-
-void getUserInput(char *input, char **command, char **arguments)
-{
+void getUserInput(char *input) {
+    printf("$ ");
+    fflush(stdout);
     fgets(input, SIZE, stdin);
-    input[strcspn(input, "\n")] = 0; // Remove trailing newline
+    input[strcspn(input, "\n")] = '\0';  // Remove the newline character
+}
 
-    *command = strtok(input, " ");
-
-    int i = 0;
-
-    char *token = strtok(NULL, " ");
-    while (token != NULL)
-    {
-        arguments[i] = token;
-        i++;
-        token = strtok(NULL, " ");
-    }
-
-    // Null terminate the arguments array
-    arguments[i] = NULL;
-
-    // Print the command and arguments
-    printf("Command: %s\n", *command);
-    printf("Arguments:\n");
-    for (int j = 0; j < i; j++)
-    {
-        printf("%s\n", arguments[j]);
+void history(char historyData[HISTORY_SIZE][SIZE], int historyCount) {
+    for (int i = 0; i < historyCount; ++i) {
+        printf("%d %s\n", i + 1, historyData[i]);
     }
 }
 
-int main()
-{
+int main() {
     char input[SIZE];
-    char *arguments[SIZE];
     char *command;
+    char *arguments[SIZE];
+    char historyData[HISTORY_SIZE][SIZE];
+    int historyCount = 0;
 
-    while (1)
-    {
-        getUserInput(input, &command, arguments);
+    while (1) {
+        getUserInput(input);
 
-        if (strcmp(command, "history") == 0)
-        {
-            history(&arguments);
+        // Store the command in history
+        if (historyCount < HISTORY_SIZE) {
+            strcpy(historyData[historyCount], input);
+            historyCount++;
+        } else {
+            // Optional: Handle the case where history is full, e.g., by shifting elements
         }
-        if (strcmp(command, "cd") == 0)
-        {
-            cd(arguments);
+
+        // Parse the command and arguments
+        command = strtok(input, " ");
+        int i = 0;
+        while (command != NULL && i < SIZE) {
+            arguments[i++] = command;
+            command = strtok(NULL, " ");
         }
-        else if (strcmp(command, "pwd") == 0)
-        {
-            pwd(arguments);
-        }
-        else if (strcmp(command, "exit") == 0)
-        {
-            exit(&arguments);
-        }
-        else
-        {
+        arguments[i] = NULL;  // Null-terminate the arguments array
+        command = arguments[0];
+
+        // Command handling
+        if (strcmp(command, "cd") == 0) {
+            // Implement and call cd() function
+            printf("cd command executed\n");
+        } else if (strcmp(command, "pwd") == 0) {
+            // Implement and call pwd() function
+            printf("pwd command executed\n");
+        } else if (strcmp(command, "exit") == 0) {
+
+
+        } else if (strcmp(command, "history") == 0) {
+            history(historyData, historyCount);
+        } else {
             // Handle other commands using fork and exec
-            printf("Executing command: %s\n", command);
         }
     }
 
     return 0;
 }
+
+
+
+// void getUserInput(char *input, char **command, char **arguments)
+// {
+//     fgets(input, SIZE, stdin);
+//     input[strcspn(input, "\n")] = 0; // Remove trailing newline
+
+//     *command = strtok(input, " ");
+
+//     int i = 0;
+
+//     char *token = strtok(NULL, " ");
+//     while (token != NULL)
+//     {
+//         arguments[i] = token;
+//         i++;
+//         token = strtok(NULL, " ");
+//     }
+
+//     // Null terminate the arguments array
+//     arguments[i] = NULL;
+    
+//     // Print the command and arguments
+//     printf("Command: %s\n", *command);
+//     printf("Arguments:\n");
+//     for (int j = 0; j < i; j++)
+//     {
+//         printf("%s\n", arguments[j]);
+//     }
+// }
