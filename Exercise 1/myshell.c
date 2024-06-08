@@ -1,6 +1,8 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #define SIZE 100
 #define HISTORY_SIZE 100
@@ -150,6 +152,7 @@ int main()
         }
         else if (strcmp(command, "exit") == 0)
         {
+              exit(0);
         }
         else if (strcmp(command, "history") == 0)
         {
@@ -157,7 +160,19 @@ int main()
         }
         else
         {
-            // Handle other commands using fork and exec
+               pid_t pid = fork();
+            if (pid < 0) {
+                perror("fork failed");
+                continue;
+            } else if (pid == 0) {
+                // Child process
+                execvp(command, arguments);
+                perror("exec failed");
+                exit(1);
+            } else {
+                // Parent process
+                wait(NULL);
+            }
         }
     }
 
