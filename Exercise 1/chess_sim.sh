@@ -6,7 +6,6 @@ declare -A prev_board
 
 # Array to store board states
 declare -a board_states
-board_index=0
 
 # Function to create the board with initial positions
 create_board() {
@@ -37,7 +36,7 @@ save_board_state() {
             board_state+="${board[$i,$j]}"
         done
     done
-    board_states[$board_index]=$board_state
+    board_states[$counter]=$board_state
 }
 
 # Function to load a board state
@@ -68,7 +67,7 @@ print_chessboard() {
 # Function to move a piece based on UCI move
 move_step_forward() {
     # Get the move from the UCI moves array
-    current_move=${moves[$board_index]}
+    current_move=${moves[$counter]}
 
     # Get the starting and ending positions from the move
     start_pos=${current_move:0:2}
@@ -88,7 +87,8 @@ move_step_forward() {
     board[$start_row,$start_col]='.'
 
     # Save the new board state
-    ((board_index++))
+    ((counter++))
+
     save_board_state
 
  
@@ -110,7 +110,7 @@ game_flow() {
             d)  # Move forward
                 if ((counter < ${#moves[@]})); then
                     move_step_forward
-                    ((counter++))
+                    echo "Counter=$counter"
                 else
                     echo "Already at the last move."
                 fi
@@ -118,7 +118,9 @@ game_flow() {
             a)  # Move backward
                 if ((counter > 0)); then
                     ((counter--))
+                    echo "Counter=$counter"
                     load_board_state $counter
+                    counter--
                     
                 else
                     echo "Already at the first move."
