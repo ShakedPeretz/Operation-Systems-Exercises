@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if the number of arguments is exactly 2
-check_valid_input(){
+check_valid_input() {
     if [ "$#" -ne 2 ]; then
         echo "Usage: $0 <source_pgn_file> <destination_directory>"
         exit 1
@@ -9,7 +9,7 @@ check_valid_input(){
 }
 
 # Check if the source file exists
-check_file_exist(){
+check_file_exist() {
     if [ ! -e "$input_file" ]; then
         echo "Error: File '$input_file' does not exist."
         exit 1
@@ -17,7 +17,7 @@ check_file_exist(){
 }
 
 # Check if the destination directory exists, and create it if it doesn't
-create_dest_dir(){
+create_dest_dir() {
     if [ ! -d "$dest_dir" ]; then
         echo "Created directory '$dest_dir'."
         mkdir -p "$dest_dir"
@@ -30,13 +30,14 @@ split_pgn_file() {
     local game_file=""
     local in_game=0
     local game_content=""
-    
+    local base_filename=$(basename "$input_file" .pgn) # Get the base filename without extension
+
     # Read the source PGN file line by line
     while IFS= read -r line; do
         # If the line starts with [Event ", start a new game file
         if [[ $line =~ ^\[Event\ \" ]]; then
             if [[ $in_game -eq 1 ]]; then
-                game_file="$dest_dir/game_${game_count}.pgn"
+                game_file="${dest_dir}/${base_filename}_${game_count}.pgn" # Construct the filename
                 echo -e "$game_content" > "$game_file"
                 echo "Saved game to $game_file"
                 game_content=""
@@ -53,7 +54,7 @@ split_pgn_file() {
     
     # Save the last game
     if [[ $in_game -eq 1 ]]; then
-        game_file="$dest_dir/game_${game_count}.pgn"
+        game_file="${dest_dir}/${base_filename}_${game_count}.pgn" # Construct the filename
         echo -e "$game_content" > "$game_file"
         echo "Saved game to $game_file"
     fi
