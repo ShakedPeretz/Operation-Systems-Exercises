@@ -80,53 +80,12 @@ print_chessboard() {
     for ((i=0; i<8; i++)); do
         echo -n "$((8 - i)) "
         for ((j=0; j<8; j++)); do
-            echo -n "${board[$i,$j]}  "
+            echo -n "${board[$i,$j]} "
         done
         echo "$((8 - i))"
     done
     echo "  a b c d e f g h"
 }
-
-# # Function to move a piece based on UCI move
-# move_step_forward() {
-#     # Get the move from the UCI moves array
-#     echo "Counter: $counter, Total Moves: ${#moves[@]}, Move $counter: ${moves[$counter]}"
-#     current_move=${moves[counter-1]}
-
-#     # Get the starting and ending positions from the move
-#     start_pos=${current_move:0:2}
-#     end_pos=${current_move:2:2}
-
-#     # Get the row and column indices for the starting and ending positions
-#     start_row=$((8 - ${start_pos:1:1}))
-#     start_col=$(echo ${start_pos:0:1} | tr 'a-h' '0-7')
-#     end_row=$((8 - ${end_pos:1:1}))
-#     end_col=$(echo ${end_pos:0:1} | tr 'a-h' '0-7')
-
-#     # Get the piece at the starting position
-#     piece=${board[$start_row,$start_col]}
-
-#     # Move the piece to the ending position
-#     board[$end_row,$end_col]=$piece
-#     board[$start_row,$start_col]='.'
-#     # Save the new board state
-#     save_board_state
-# }
-
-# calculate_all_board_states() {
-#     # Save the initial board state at index 1
-#     save_board_state
-    
-#     # Start the counter from 1 to calculate board states from move 1
-#     for ((counter = 0; counter < ${#moves[@]}; counter++)); do
-#         move_step_forward $counter
-#     done
-# }
-
-
-
-
-
 
 calculate_all_board_states() {
     save_board_state
@@ -134,8 +93,6 @@ calculate_all_board_states() {
     # Start the counter from 0 to calculate board states from move 0
     counter=0
     while (( counter < ${#moves[@]} )); do
-        # Get the move from the UCI moves array
-        echo "Counter: $counter, Total Moves: ${#moves[@]}, Move $counter: ${moves[$counter]}"
         current_move=${moves[counter]}
 
         # Get the starting and ending positions from the move
@@ -162,30 +119,21 @@ calculate_all_board_states() {
     done
 }
 
-
-
-
-
-
-
-
 # Function to handle user input for game flow
 game_flow() {
-    echo "Metadata from PGN file:
-    $description_file
-    "
-
-    echo "uci :$uci_moves"
-
+    echo "Metadata from PGN file:"
+    echo "$description_file"
+    echo
+    
     # Calculate all board states based on moves
     calculate_all_board_states
     counter=0 
     load_board_state $counter
-
+    echo "Move $counter/${#moves[@]}"
+    print_chessboard
     while true; do
-        echo "Move $counter/${#moves[@]}"
-        print_chessboard
-        echo -n "Press 'd' to move forward, 'a' to move back, 'w' to go to the start, 's' to go to the end, 'q' to quit: "
+
+        echo "Press 'd' to move forward, 'a' to move back, 'w' to go to the start, 's' to go to the end, 'q' to quit:"
         read user_input
 
         case $user_input in
@@ -193,36 +141,41 @@ game_flow() {
                 if ((counter < ${#moves[@]})); then
                     ((counter++))
                     load_board_state $counter
+                    echo "Move $counter/${#moves[@]}"
+                    print_chessboard
                 else
-                    echo "Already at the last move."
+                    echo "No more moves available."
                 fi
                 ;;
             a)  # Move backward
                 if ((counter > 0)); then
                     ((counter--))
                     load_board_state $counter
-                else
-                    echo "Already at the first move."
                 fi
+                echo "Move $counter/${#moves[@]}"
+                print_chessboard
                 ;;
             w)  # Go to the start
                 counter=0
-                load_initial_board_state                
+                load_initial_board_state         
+                echo "Move $counter/${#moves[@]}"
+                print_chessboard       
                 ;;
             s)  # Go to the end
                 counter=$((${#moves[@]}))
                 load_board_state $counter
+                echo "Move $counter/${#moves[@]}"
+                print_chessboard
                 ;;
             q)  # Quit
-                echo "Exiting. End of game."
+                echo "Exiting."
+                echo "End of game."
                 break
                 ;;
-            *)  echo "Invalid input";;
+            *)  echo "Invalid key pressed: $user_input";;
         esac
     done
 }
-
-
 
 extract_description() {
     description_file=$(grep '^\[' "$pgn_file")
