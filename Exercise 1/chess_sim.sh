@@ -2,10 +2,15 @@
 
 # Initialize the board as an associative array
 declare -A board
-declare -A prev_board
 
 # Array to store board states
 declare -a board_states
+
+# Variable to store the initial board state
+declare -A init_board
+
+# Global counter for moves
+counter=0
 
 # Function to create the board with initial positions
 create_board() {
@@ -25,7 +30,16 @@ create_board() {
     done
 
     # Save the initial board state
-    save_board_state
+    save_initial_board_state
+}
+
+# Function to save the initial board state
+save_initial_board_state() {
+    for ((i=0; i<8; i++)); do
+        for ((j=0; j<8; j++)); do
+            init_board[$i,$j]=${board[$i,$j]}
+        done
+    done
 }
 
 # Function to save the current board state
@@ -37,6 +51,15 @@ save_board_state() {
         done
     done
     board_states[$counter]=$board_state
+}
+
+# Function to load the initial board state
+load_initial_board_state() {
+    for ((i=0; i<8; i++)); do
+        for ((j=0; j<8; j++)); do
+            board[$i,$j]=${init_board[$i,$j]}
+        done
+    done
 }
 
 # Function to load a board state
@@ -64,42 +87,101 @@ print_chessboard() {
     echo "  a b c d e f g h"
 }
 
-# Function to move a piece based on UCI move
-move_step_forward() {
-    # Get the move from the UCI moves array
-    current_move=${moves[$counter]}
+# # Function to move a piece based on UCI move
+# move_step_forward() {
+#     # Get the move from the UCI moves array
+#     echo "Counter: $counter, Total Moves: ${#moves[@]}, Move $counter: ${moves[$counter]}"
+#     current_move=${moves[counter-1]}
 
-    # Get the starting and ending positions from the move
-    start_pos=${current_move:0:2}
-    end_pos=${current_move:2:2}
+#     # Get the starting and ending positions from the move
+#     start_pos=${current_move:0:2}
+#     end_pos=${current_move:2:2}
 
-    # Get the row and column indices for the starting and ending positions
-    start_row=$((8 - ${start_pos:1:1}))
-    start_col=$(echo ${start_pos:0:1} | tr 'a-h' '0-7')
-    end_row=$((8 - ${end_pos:1:1}))
-    end_col=$(echo ${end_pos:0:1} | tr 'a-h' '0-7')
+#     # Get the row and column indices for the starting and ending positions
+#     start_row=$((8 - ${start_pos:1:1}))
+#     start_col=$(echo ${start_pos:0:1} | tr 'a-h' '0-7')
+#     end_row=$((8 - ${end_pos:1:1}))
+#     end_col=$(echo ${end_pos:0:1} | tr 'a-h' '0-7')
 
-    # Get the piece at the starting position
-    piece=${board[$start_row,$start_col]}
+#     # Get the piece at the starting position
+#     piece=${board[$start_row,$start_col]}
 
-    # Move the piece to the ending position
-    board[$end_row,$end_col]=$piece
-    board[$start_row,$start_col]='.'
+#     # Move the piece to the ending position
+#     board[$end_row,$end_col]=$piece
+#     board[$start_row,$start_col]='.'
+#     # Save the new board state
+#     save_board_state
+# }
 
-    # Save the new board state
-    ((counter++))
+# calculate_all_board_states() {
+#     # Save the initial board state at index 1
+#     save_board_state
+    
+#     # Start the counter from 1 to calculate board states from move 1
+#     for ((counter = 0; counter < ${#moves[@]}; counter++)); do
+#         move_step_forward $counter
+#     done
+# }
 
+
+
+
+
+
+calculate_all_board_states() {
     save_board_state
+    
+    # Start the counter from 0 to calculate board states from move 0
+    counter=0
+    while (( counter < ${#moves[@]} )); do
+        # Get the move from the UCI moves array
+        echo "Counter: $counter, Total Moves: ${#moves[@]}, Move $counter: ${moves[$counter]}"
+        current_move=${moves[counter]}
 
- 
+        # Get the starting and ending positions from the move
+        start_pos=${current_move:0:2}
+        end_pos=${current_move:2:2}
+
+        # Get the row and column indices for the starting and ending positions
+        start_row=$((8 - ${start_pos:1:1}))
+        start_col=$(echo ${start_pos:0:1} | tr 'a-h' '0-7')
+        end_row=$((8 - ${end_pos:1:1}))
+        end_col=$(echo ${end_pos:0:1} | tr 'a-h' '0-7')
+
+        # Get the piece at the starting position
+        piece=${board[$start_row,$start_col]}
+
+        # Move the piece to the ending position
+        board[$end_row,$end_col]=$piece
+        board[$start_row,$start_col]='.'
+        
+        ((counter++))
+
+        # Save the new board state
+        save_board_state
+    done
 }
+
+
+
+
+
+
+
 
 # Function to handle user input for game flow
 game_flow() {
-    local counter=0
     echo "Metadata from PGN file:
     $description_file
     "
+
+    echo "uci :$uci_moves"
+
+    # Calculate all board states based on moves
+    calculate_all_board_states
+    counter=0 
+    load_board_state $counter
+
     while true; do
         echo "Move $counter/${#moves[@]}"
         print_chessboard
@@ -109,8 +191,8 @@ game_flow() {
         case $user_input in
             d)  # Move forward
                 if ((counter < ${#moves[@]})); then
-                    move_step_forward
-                    echo "Counter=$counter"
+                    ((counter++))
+                    load_board_state $counter
                 else
                     echo "Already at the last move."
                 fi
@@ -118,33 +200,28 @@ game_flow() {
             a)  # Move backward
                 if ((counter > 0)); then
                     ((counter--))
-                    echo "Counter=$counter"
                     load_board_state $counter
-                    counter--
-                    
                 else
                     echo "Already at the first move."
                 fi
                 ;;
             w)  # Go to the start
                 counter=0
-                load_board_state $counter
-                
+                load_initial_board_state                
                 ;;
             s)  # Go to the end
-                counter=${#moves[@]}
+                counter=$((${#moves[@]}))
                 load_board_state $counter
-                
                 ;;
             q)  # Quit
-                echo "Exiting.
-                    End of game."
+                echo "Exiting. End of game."
                 break
                 ;;
             *)  echo "Invalid input";;
         esac
     done
 }
+
 
 
 extract_description() {
